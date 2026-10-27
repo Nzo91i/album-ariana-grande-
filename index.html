@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ariana Grande – Ma playlist</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #ffffff;
+      background-color: #121212;
+      background-image: linear-gradient(180deg, #5b3a8c, #121212 500px);
+      background-repeat: no-repeat;
+    }
+    a { color: #ffffff; text-decoration: none; }
+    ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 10px; flex-wrap: wrap; }
+    header, footer { padding: 16px 32px; }
+    nav a { display: block; padding: 8px 16px; border-radius: 999px; background: rgba(255,255,255,0.12); }
+    header li:first-child a { background: #1ed760; color: #000000; }
+    main { padding: 16px 32px; }
+    section { max-width: 960px; margin: 0 auto; display: flex; gap: 32px; flex-wrap: wrap; }
+    section > div:first-child { width: 240px; }
+    section > div:last-child { flex: 1; min-width: 280px; }
+    img { width: 240px; height: 240px; object-fit: cover; border-radius: 6px; background: #7a4fb0; }
+    small { color: #b3b3b3; }
+    h1 { font-size: 56px; margin: 4px 0 24px; line-height: 1; }
+    ol li { padding: 12px; border-radius: 6px; }
+    ol li:hover { background: rgba(255,255,255,0.1); }
+    audio { display: block; width: 100%; margin-top: 8px; }
+    footer { color: #b3b3b3; }
+    footer a { color: #b3b3b3; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <nav aria-label="Navigation principale">
+      <ul>
+        <li><a href="#">Accueil</a></li>
+        <li><a href="#">Albums</a></li>
+        <li><a href="#">Musique</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section>
+      <div>
+        <img src="imagee.png" alt="Portrait d’Ariana Grande" width="100" height="100">
+        <p>Née en Floride en 1993, révélée à la télévision avant de devenir l’une des voix pop les plus reconnaissables.</p>
+      </div>
+
+      <div>
+        <small>Chanteuse, auteure-compositrice et actrice</small>
+        <h1>Ariana Grande</h1>
+        <h2>thank u, next</h2>
+        <h3>Mes morceaux préférés de l'album</h3>
+        <ol>
+          <li>
+            Premier morceau
+            <audio controls preload="none" src="son1.mp3"></audio>
+          </li>
+          <li>
+            Deuxième morceau
+            <audio controls preload="none" src="son2.mp3"></audio>
+          </li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <nav aria-label="Navigation du pied de page">
+      
+    </nav>
+    <p>Enzo Alves</p>
+  </footer>
+
+</body>
+</html>
