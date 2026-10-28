@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ariana Grande – Ma playlist</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <nav aria-label="Navigation principale">
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="albums.html">Albums</a></li>
+        <li><a href="musique.html">Musique</a></li>
+        <li><a href="playlist.html" class="active">Playlist</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <small>Mon mix</small>
+      <h1>Playlist</h1>
+      <p class="intro" id="intro"></p>
+
+      <div id="playerbox" style="display:none">
+        <div class="player"><div id="embed"></div><p class="now" id="now"></p></div>
+        <div class="actions">
+          <button class="btn-ghost" id="prev" type="button">⏮ Précédent</button>
+          <button class="btn-main" id="next" type="button">Suivant ⏭</button>
+          <button class="btn-ghost" id="shuffle" type="button">🔀 Mélanger</button>
+          <button class="btn-ghost" id="copy" type="button">📋 Copier la liste</button>
+          <button class="btn-ghost" id="clear" type="button">Tout vider</button>
+        </div>
+      </div>
+
+      <div class="list" id="list"></div>
+    </div>
+  </main>
+
+  <footer>
+   
+  </footer>
+
+  <script src="data.js"></script>
+  <script>
+    const listEl = document.getElementById("list");
+    const intro = document.getElementById("intro");
+    const box = document.getElementById("playerbox");
+    const nowEl = document.getElementById("now");
+
+    let ctl = null, idx = -1, last = { pos: 0, dur: 0 }, ended = 0;
+    const items = () => AG.pl.get().map(AG.find).filter(Boolean);
+
+    function highlight() {
+      listEl.querySelectorAll(".item").forEach((el, k) => el.classList.toggle("playing", k === idx));
+    }
+
+    function play(k) {
+      const l = items();
+      if (!l.length) return;
+      idx = (k + l.length) % l.length;
+      const t = l[idx];
+      highlight();
+      nowEl.textContent = "En lecture : " + t.title + " · " + t.al.title;
+      last = { pos: 0, dur: 0 };
+      if (!t.sid) { window.open("https://open.spotify.com/search/" + encodeURIComponent(t.title + " Ariana Grande"), "_blank"); return; }
+      if (ctl) { ctl.loadUri("spotify:track:" + t.sid); ctl.play(); }
+    }
+
+    // Quand un titre se termine, on passe automatiquement au suivant
+    function onUpd(e) {
+      const d = e && e.data;
+      if (!d) return;
+      if (d.isPaused && d.position === 0 && last.pos > 0 && last.dur > 0 && last.dur - last.pos < 3000 && Date.now() - ended > 2000) {
+        ended = Date.now();
+        play(idx + 1);
+      }
+      last = { pos: d.position, dur: d.duration };
+    }
+
+    function render() {
+      const l = items();
+      listEl.innerHTML = "";
+      intro.textContent = l.length ? l.length + (l.length > 1 ? " titres dans ta playlist." : " titre dans ta playlist.") : "";
+      box.style.display = l.length ? "" : "none";
+
+      if (!l.length) {
+        listEl.innerHTML = '<div class="empty-box">Ta playlist est vide.<br>Clique sur ＋ à côté d’un titre sur la page <a href="musique.html"><u>Musique</u></a>, ou utilise « Tout ajouter » sur une page d’album 🎶</div>';
+        return;
+      }
+
+      l.forEach((t, k) => {
+        const row = document.createElement("div");
+        row.className = "item";
+        row.innerHTML =
+          '<span class="n"></span><button type="button" class="info"><b></b><span></span></button>' +
+          '<span class="acts"><button type="button" class="plus up" aria-label="Monter">▲</button>' +
+          '<button type="button" class="plus down" aria-label="Descendre">▼</button>' +
+          '<button type="button" class="plus del" aria-label="Retirer">✕</button></span>';
+        row.querySelector(".n").textContent = k + 1;
+        row.querySelector("b").textContent = t.title;
+        row.querySelector(".info span").textContent = t.al.title + " · " + t.al.year;
+        row.querySelector(".info").addEventListener("click", () => play(k));
+        row.querySelector(".acts").prepend(AG.heart(t.id));
+
+        const move = (from, to) => {
+          const ids = l.map(x => x.id);
+          if (to < 0 || to >= ids.length) return;
+          ids.splice(to, 0, ids.splice(from, 1)[0]);
+          AG.pl.set(ids);
+          if (idx === from) idx = to; else if (from < idx && to >= idx) idx--; else if (from > idx && to <= idx) idx++;
+          render();
+        };
+        row.querySelector(".up").addEventListener("click", () => move(k, k - 1));
+        row.querySelector(".down").addEventListener("click", () => move(k, k + 1));
+        row.querySelector(".del").addEventListener("click", () => {
+          AG.pl.remove(t.id);
+          if (k < idx) idx--; else if (k === idx) idx = -1;
+          render();
+        });
+        listEl.appendChild(row);
+      });
+      highlight();
+    }
+
+    document.getElementById("next").addEventListener("click", () => play(idx + 1));
+    document.getElementById("prev").addEventListener("click", () => play(idx - 1));
+    document.getElementById("shuffle").addEventListener("click", () => {
+      const ids = items().map(x => x.id);
+      for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+      AG.pl.set(ids); idx = -1; render(); AG.toast("Playlist mélangée 🔀");
+    });
+    document.getElementById("clear").addEventListener("click", () => {
+      if (confirm("Vider toute la playlist ?")) { AG.pl.set([]); idx = -1; render(); }
+    });
+    document.getElementById("copy").addEventListener("click", async () => {
+      const txt = items().map((t, k) => (k + 1) + ". " + t.title + " – Ariana Grande").join("\n");
+      try { await navigator.clipboard.writeText(txt); AG.toast("Liste copiée ✓"); } catch (e) { AG.toast("Copie impossible"); }
+    });
+
+    render();
+
+    // Lecteur Spotify (créé seulement s'il y a des titres)
+    const first = items().find(t => t.sid);
+    if (first) {
+      AG.spotify(api => api.createController(document.getElementById("embed"),
+        { uri: "spotify:track:" + first.sid, width: "100%", height: 152 },
+        c => { ctl = c; c.addListener("playback_update", onUpd); }));
+    }
+  </script>
+  <script src="script.js" defer></script>
+</body>
+</html>

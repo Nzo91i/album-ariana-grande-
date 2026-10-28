@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ariana Grande – Quiz</title>
+  <meta name="description" content="Teste tes connaissances sur Ariana Grande : quiz classique, par album ou devine le titre.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .qwrap { max-width: 720px; margin: 0 auto; }
+    .qcard {
+      padding: 28px; border-radius: 24px; background: var(--glass); border: 1px solid var(--border);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      animation: fadeUp .7s var(--ease) .2s backwards;
+    }
+    .qtop { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+      color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+    .qtop b { color: #fff; }
+    .bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; margin-bottom: 8px; }
+    .bar > i { display: block; height: 100%; width: 0; border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .4s var(--ease); }
+    .bar.timer > i { transition: width .1s linear; }
+    .bar.timer.low > i { background: #ff5a5a; }
+    .qcat { display: inline-block; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 99px; background: rgba(255,255,255,.1); color: var(--muted); margin: 18px 0 4px; }
+    .qtext { font-size: clamp(20px, 3.4vw, 26px); font-weight: 600; line-height: 1.35; margin: 8px 0 22px; }
+    .opts { display: grid; gap: 12px; }
+    .opt {
+      display: flex; align-items: center; gap: 14px; text-align: left; font: inherit; font-size: 16px; color: #fff;
+      cursor: pointer; padding: 14px 18px; border-radius: 16px; border: 1px solid var(--border);
+      background: rgba(255,255,255,.05); transition: transform .3s var(--ease), background .3s, border-color .3s;
+      animation: slideIn .5s var(--ease) backwards;
+    }
+    .opt:nth-child(2) { animation-delay: .06s; } .opt:nth-child(3) { animation-delay: .12s; } .opt:nth-child(4) { animation-delay: .18s; }
+    .opt:hover:not(:disabled) { transform: translateX(6px); background: rgba(255,255,255,.14); }
+    .opt .k { flex: 0 0 28px; height: 28px; display: grid; place-items: center; border-radius: 50%;
+      background: rgba(255,255,255,.12); font-size: 13px; font-weight: 600; }
+    .opt:disabled { cursor: default; }
+    .opt.good { background: rgba(60, 220, 130, .25); border-color: #3cdc82; }
+    .opt.bad  { background: rgba(255, 90, 90, .25); border-color: #ff5a5a; animation: shake .4s; }
+    .opt.dim  { opacity: .5; }
+    @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+    .fb { margin-top: 20px; padding: 16px 18px; border-radius: 16px; background: rgba(255,255,255,.07);
+      color: var(--muted); line-height: 1.55; animation: fadeUp .4s var(--ease); }
+    .fb strong { color: #fff; }
+    .qactions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 22px; }
+    .qactions button { font: inherit; font-weight: 600; color: #fff; border: 0; cursor: pointer; }
+    .qactions .btn-ghost { border: 1px solid rgba(255,255,255,.3); }
+    .streak { color: #ffd166; font-weight: 600; }
+    .final { text-align: center; }
+    .final .emoji { font-size: 64px; animation: float 4s ease-in-out infinite; }
+    .final .score { font-size: clamp(48px, 10vw, 84px); font-weight: 800; line-height: 1;
+      background: linear-gradient(90deg, #fff, #f0b6ff, #ff9ecb); -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; }
+    .final h2 { margin: 12px 0 6px; font-size: 28px; }
+    .final p { color: var(--muted); margin: 6px 0; }
+    .final .qactions { justify-content: center; }
+    .hidden { display: none; }
+
+    /* Réglages de départ */
+    .cfg { margin: 20px 0; }
+    .cfg > b { display: block; color: var(--muted); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500; margin-bottom: 8px; }
+    .pills { display: flex; gap: 10px; flex-wrap: wrap; }
+    .pill { font: inherit; font-size: 14px; color: #fff; cursor: pointer; padding: 9px 18px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--glass); transition: transform .3s var(--ease), background .3s; }
+    .pill:hover { transform: translateY(-3px); background: rgba(255,255,255,.15); }
+    .pill.on { background: linear-gradient(135deg, var(--accent), var(--accent2)); border-color: transparent; box-shadow: 0 6px 18px rgba(208,0,255,.4); }
+    select { font: inherit; color: #fff; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--border); background: var(--glass); max-width: 100%; }
+    select option { color: #000; }
+    .hint { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 6px 0 0; }
+
+    /* Lecteur audio caché du mode « Devine le titre » */
+    .audio { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 4px 0 18px; }
+    .audio button { font: inherit; font-weight: 600; color: #fff; cursor: pointer; padding: 12px 22px; border-radius: 999px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.05); }
+    .audio .count { margin: 0; }
+    .aud { position: fixed; bottom: 0; right: 0; width: 320px; height: 80px; opacity: .01; pointer-events: none; z-index: -1; }
+    .aud.show { position: static; width: 100%; opacity: 1; pointer-events: auto; z-index: auto; margin-bottom: 18px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <nav aria-label="Navigation principale">
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="albums.html">Albums</a></li>
+        <li><a href="musique.html">Musique</a></li>
+        <li><a href="quiz.html" class="active">Quiz</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="qwrap">
+      <small>Teste-toi</small>
+      <h1>Quiz</h1>
+      <p class="intro">10 questions, un chrono, des séries de bonnes réponses. Es-tu un vrai fan d’Ariana ?</p>
+
+      <section class="qcard" id="start">
+        <div class="cfg"><b>Mode</b><div class="pills" id="modes"></div><p class="hint" id="hint"></p></div>
+        <div class="cfg hidden" id="albrow"><b>Album</b><select id="albsel" aria-label="Choisir un album"></select></div>
+        <div class="cfg"><b>Difficulté</b><div class="pills" id="diffs"></div></div>
+        <p class="count" id="best"></p>
+        <div class="qactions">
+          <button class="btn-main" id="go" type="button">Commencer le quiz</button>
+        </div>
+      </section>
+
+      <section class="qcard hidden" id="game" aria-live="polite">
+        <div class="qtop">
+          <span>Question <b id="num">1</b>/<span id="total">10</span></span>
+          <span class="streak" id="streak"></span>
+          <span>Score : <b id="pts">0</b></span>
+        </div>
+        <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+        <div class="bar timer" id="timerbar" aria-hidden="true"><i id="timer"></i></div>
+        <span class="qcat" id="cat"></span>
+        <p class="qtext" id="qtext"></p>
+
+        <div class="audio hidden" id="audio">
+          <button id="listen" type="button">🎧 Écouter l’extrait</button>
+          <span class="count" id="alabel"></span>
+          <button id="showp" type="button">Pas de son ?</button>
+        </div>
+        <div class="aud" id="aud"><div id="embed"></div></div>
+
+        <div class="opts" id="opts"></div>
+        <div class="fb hidden" id="fb"></div>
+        <div class="qactions hidden" id="nextrow">
+          <button class="btn-main" id="next" type="button">Suivant →</button>
+        </div>
+      </section>
+
+      <section class="qcard final hidden" id="end">
+        <div class="emoji" id="emoji">🏆</div>
+        <div class="score" id="fscore"></div>
+        <h2 id="rank"></h2>
+        <p id="detail"></p>
+        <p id="record"></p>
+        <div class="qactions">
+          <button class="btn-main" id="again" type="button">Rejouer</button>
+          <button class="btn-ghost" id="menu" type="button">Changer de mode</button>
+          <button class="btn-ghost" id="share" type="button">Copier mon résultat</button>
+          <a class="btn-ghost" href="musique.html">Écouter de la musique</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    
+  </footer>
+
+  <script src="data.js"></script>
+  <script>
+    // Mode « Classique » : la BONNE réponse est toujours en premier dans "a" (l'ordre est mélangé à l'affichage).
+    const BANK = [
+      { cat: "Discographie", q: "Quel est le premier album studio d’Ariana Grande ?",
+        a: ["Yours Truly", "My Everything", "Sweetener", "Dangerous Woman"],
+        e: "<strong>Yours Truly</strong> sort en 2013 et entre directement à la 1re place du Billboard 200." },
+      { cat: "Discographie", q: "Sur quel album trouve-t-on « 7 rings » ?",
+        a: ["thank u, next", "Positions", "Sweetener", "eternal sunshine"],
+        e: "« 7 rings » figure sur <strong>thank u, next</strong> (2019) et a atteint la 1re place du Hot 100." },
+      { cat: "Discographie", q: "Quel album contient « no tears left to cry » et « God is a woman » ?",
+        a: ["Sweetener", "Dangerous Woman", "My Everything", "Positions"],
+        e: "Les deux titres sont sur <strong>Sweetener</strong> (2018), qui lui a valu son premier Grammy." },
+      { cat: "Discographie", q: "Quel album contient « Into You » ?",
+        a: ["Dangerous Woman", "My Everything", "Yours Truly", "thank u, next"],
+        e: "« Into You » est sur <strong>Dangerous Woman</strong> (2016)." },
+      { cat: "Discographie", q: "Quel titre ouvre l’album Positions ?",
+        a: ["shut up", "34+35", "positions", "motive"],
+        e: "<strong>« shut up »</strong> ouvre l’album, suivi de « 34+35 »." },
+      { cat: "Discographie", q: "Quel est le single qui a lancé l’ère eternal sunshine en 2024 ?",
+        a: ["yes, and?", "the boy is mine", "we can’t be friends", "bye"],
+        e: "<strong>« yes, and? »</strong> est sorti en janvier 2024 et a débuté en tête du Hot 100." },
+      { cat: "Discographie", q: "Quel album contient « Problem » ?",
+        a: ["My Everything", "Yours Truly", "Sweetener", "Positions"],
+        e: "« Problem » (avec Iggy Azalea) est sur <strong>My Everything</strong> (2014)." },
+      { cat: "Discographie", q: "Quel album contient « Baby I » et « The Way » ?",
+        a: ["Yours Truly", "My Everything", "Dangerous Woman", "Sweetener"],
+        e: "Ces deux titres sont sur son premier album, <strong>Yours Truly</strong>." },
+      { cat: "Collaborations", q: "Qui chante avec Ariana sur « Side to Side » ?",
+        a: ["Nicki Minaj", "Iggy Azalea", "Doja Cat", "Missy Elliott"],
+        e: "<strong>Nicki Minaj</strong> est en featuring sur « Side to Side » (2016)." },
+      { cat: "Collaborations", q: "Avec quel artiste Ariana a-t-elle chanté « Love Me Harder » ?",
+        a: ["The Weeknd", "Big Sean", "Zedd", "Future"],
+        e: "« Love Me Harder » est un duo avec <strong>The Weeknd</strong>, sur My Everything." },
+      { cat: "Collaborations", q: "Quel DJ produit et chante avec elle sur « Break Free » ?",
+        a: ["Zedd", "Calvin Harris", "Avicii", "Diplo"],
+        e: "<strong>Zedd</strong> a produit « Break Free » et apparaît sur le titre." },
+      { cat: "Collaborations", q: "Qui a largement produit l’album Sweetener ?",
+        a: ["Pharrell Williams", "Max Martin", "Timbaland", "Metro Boomin"],
+        e: "<strong>Pharrell Williams</strong> a produit une grande partie de Sweetener, avec Ariana et Max Martin." },
+      { cat: "Collaborations", q: "Quelle chanteuse est en featuring sur « Leave Me Lonely » ?",
+        a: ["Macy Gray", "Nicki Minaj", "Lady Gaga", "Cardi B"],
+        e: "<strong>Macy Gray</strong> chante avec Ariana sur « Leave Me Lonely » (Dangerous Woman)." },
+      { cat: "Collaborations", q: "Avec quelle artiste Ariana a-t-elle chanté « motive » ?",
+        a: ["Doja Cat", "Megan Thee Stallion", "Normani", "Lizzo"],
+        e: "« motive » est un duo avec <strong>Doja Cat</strong>, sur Positions." },
+      { cat: "Carrière", q: "Dans quelle série Nickelodeon Ariana joue-t-elle Cat Valentine ?",
+        a: ["Victorious", "iCarly", "Drake & Josh", "Zoey 101"],
+        e: "Elle joue Cat dans <strong>Victorious</strong>, puis reprend le rôle dans le spin-off Sam & Cat." },
+      { cat: "Carrière", q: "Quelle comédie musicale de Broadway marque ses débuts en 2008 ?",
+        a: ["13", "Hairspray", "Wicked", "Grease"],
+        e: "Elle débute à Broadway dans <strong>13</strong>." },
+      { cat: "Carrière", q: "Quel rôle joue-t-elle dans le film Wicked ?",
+        a: ["Glinda", "Elphaba", "Nessarose", "Fiyero"],
+        e: "Elle incarne <strong>Glinda</strong>, face à Cynthia Erivo (Elphaba). Ce rôle lui a valu une nomination à l’Oscar de la meilleure actrice dans un second rôle." },
+      { cat: "Carrière", q: "Quelle actrice joue Elphaba face à Ariana dans Wicked ?",
+        a: ["Cynthia Erivo", "Zendaya", "Anne Hathaway", "Lupita Nyong’o"],
+        e: "<strong>Cynthia Erivo</strong> joue Elphaba, la future Méchante Sorcière de l’Ouest." },
+      { cat: "Carrière", q: "Pour quel album Ariana a-t-elle remporté son premier Grammy (meilleur album pop vocal) ?",
+        a: ["Sweetener", "thank u, next", "Dangerous Woman", "Positions"],
+        e: "<strong>Sweetener</strong> a remporté le Grammy du meilleur album pop vocal en 2019." },
+      { cat: "Culture pop", q: "En 2019, Ariana occupe en même temps les 3 premières places du Hot 100. Une première depuis quel groupe, en 1964 ?",
+        a: ["Les Beatles", "Les Rolling Stones", "Les Beach Boys", "Les Supremes"],
+        e: "Avec « 7 rings », « break up with your girlfriend, i’m bored » et « thank u, next », elle égale l’exploit des <strong>Beatles</strong> de 1964." },
+      { cat: "Culture pop", q: "Quel film est parodié dans le clip de « thank u, next » ?",
+        a: ["Mean Girls", "Titanic", "Twilight", "Frozen"],
+        e: "Le clip rend hommage à <strong>Mean Girls</strong>, mais aussi à Legally Blonde, Bring It On et 13 Going on 30." },
+      { cat: "Culture pop", q: "Dans quel État américain Ariana Grande est-elle née ?",
+        a: ["Floride", "Californie", "Texas", "New York"],
+        e: "Elle est née en <strong>Floride</strong> en 1993, à Boca Raton." },
+      { cat: "Culture pop", q: "Quel est le titre de l’album qui contient « 34+35 » ?",
+        a: ["Positions", "Sweetener", "thank u, next", "My Everything"],
+        e: "« 34+35 » est le 2e titre de <strong>Positions</strong> (2020)." },
+      { cat: "Culture pop", q: "Combien d’albums studio figurent sur ce site, de Yours Truly à petal ?",
+        a: ["8", "6", "7", "10"],
+        e: "Le site recense <strong>8 albums studio</strong>, de 2013 à 2026." }
+    ];
+
+    const N = 10;
+    const DIFFS = [
+      { n: "Facile",    t: 30, m: 1,   clip: 10 },
+      { n: "Moyen",     t: 20, m: 1.5, clip: 5 },
+      { n: "Difficile", t: 12, m: 2,   clip: 3 }
+    ];
+    const MODES = [
+      ["classic", "📚 Classique"],
+      ["album",   "💿 Par album"],
+      ["audio",   "🎧 Devine le titre"]
+    ];
+    const HINTS = {
+      classic: "24 questions de culture générale sur Ariana : discographie, collaborations, carrière.",
+      album:   "Questions générées à partir des titres du site : année, ouverture, numéro de piste, featurings…",
+      audio:   "Un extrait Spotify, à toi de retrouver le titre. Il faut pouvoir lancer Spotify dans ton navigateur."
+    };
+
+    const $ = id => document.getElementById(id);
+    const esc = AG.esc;
+    const norm = s => String(s).toLowerCase();
+    const shuffle = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+    // Réponse juste en premier + 3 mauvaises réponses différentes tirées du "pool" (déjà mélangé)
+    function opts(correct, pool, n = 3) {
+      const seen = new Set([norm(correct)]);
+      const out = [correct];
+      for (const x of pool) {
+        if (out.length >= n + 1) break;
+        const k = norm(x);
+        if (!seen.has(k)) { seen.add(k); out.push(x); }
+      }
+      return out;
+    }
+
+    const COLLABS = [...new Set(AG.allTracks().map(t => AG.feat(t.title)).filter(Boolean))];
+
+    // Questions générées pour un album (t = type, pour équilibrer le tirage)
+    function genAlbum(al) {
+      const T = al.tracks, qs = [];
+      const others = AG.allTracks().filter(t => t.al !== al).map(t => t.title);
+      const years = AG.albums.map(x => x.year);
+      const tag = " (" + al.year + ")";
+
+      qs.push({ t: "y", cat: al.title, q: "En quelle année est sorti l’album « " + al.title + " » ?",
+        a: opts(al.year, shuffle(years)), e: "« " + esc(al.title) + " » est sorti en <strong>" + al.year + "</strong>." });
+      qs.push({ t: "f", cat: al.title, q: "Quel titre ouvre l’album « " + al.title + " » ?",
+        a: opts(T[0], shuffle(T)), e: "<strong>« " + esc(T[0]) + " »</strong> ouvre « " + esc(al.title) + " »." });
+      qs.push({ t: "l", cat: al.title, q: "Quel est le dernier titre de « " + al.title + " » ?",
+        a: opts(T[T.length - 1], shuffle(T)), e: "<strong>« " + esc(T[T.length - 1]) + " »</strong> clôt « " + esc(al.title) + " »." });
+
+      T.forEach((t, i) => {
+        qs.push({ t: "n", cat: al.title, q: "Quel est le titre n°" + (i + 1) + " de « " + al.title + " » ?",
+          a: opts(t, shuffle(T)), e: "Le n°" + (i + 1) + " est <strong>« " + esc(t) + " »</strong>." });
+        qs.push({ t: "m", cat: al.title, q: "Lequel de ces titres fait partie de l’album « " + al.title + " » ?",
+          a: opts(t, shuffle(others)), e: "« " + esc(t) + " » est bien sur <strong>" + esc(al.title) + "</strong>" + tag + "." });
+        const f = AG.feat(t);
+        if (f) qs.push({ t: "c", cat: "Collaborations", q: "Avec qui Ariana chante-t-elle « " + AG.clean(t) + " » ?",
+          a: opts(f, shuffle(COLLABS)), e: "« " + esc(AG.clean(t)) + " » est chanté avec <strong>" + esc(f) + "</strong> (" + esc(al.title) + ")." });
+      });
+      return qs;
+    }
+
+    // Tire n questions en limitant le nombre de questions du même type
+    function pickBalanced(pool, n) {
+      const by = {};
+      shuffle(pool).forEach(q => (by[q.t] = by[q.t] || []).push(q));
+      let out = [];
+      for (let cap = 3; cap <= 60; cap += 3) {
+        out = [];
+        Object.values(by).forEach(g => out.push(...g.slice(0, cap)));
+        if (out.length >= n) break;
+      }
+      return shuffle(out).slice(0, n);
+    }
+
+    function audioQs(als) {
+      const all = AG.allTracks();
+      const cand = all.filter(t => als.includes(t.al) && t.sid);
+      const titles = all.map(x => x.title);
+      return shuffle(cand).slice(0, N).map(t => {
+        const same = t.al.tracks.filter(x => x !== t.title);
+        const pool = [...shuffle(same).slice(0, 2), ...shuffle(titles)];
+        return { cat: "Devine le titre", q: "Quel est ce titre ?", track: t.sid,
+          a: opts(t.title, pool), e: "C’était <strong>« " + esc(t.title) + " »</strong>, sur " + esc(t.al.title) + " (" + t.al.year + ")." };
+      });
+    }
+
+    function build() {
+      if (cfg.mode === "classic") return shuffle(BANK).slice(0, N);
+      const als = cfg.album === "all" ? AG.albums : [AG.get(cfg.album)];
+      if (cfg.mode === "audio") return audioQs(als);
+      const pool = [];
+      als.forEach(al => pool.push(...genAlbum(al)));
+      return pickBalanced(pool, N);
+    }
+
+    /* ---------- Réglages ---------- */
+    const cfg = { mode: "classic", diff: 1, album: "all" };
+
+    const sel = $("albsel");
+    sel.innerHTML = '<option value="all">Tous les albums</option>' +
+      AG.albums.map(al => '<option value="' + al.key + '">' + esc(al.title) + " (" + al.year + ")</option>").join("");
+    sel.addEventListener("change", () => { cfg.album = sel.value; });
+
+    function renderCfg() {
+      const mk = (box, items, key) => {
+        box.innerHTML = "";
+        items.forEach(([v, label]) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "pill" + (cfg[key] === v ? " on" : "");
+          b.textContent = label;
+          b.addEventListener("click", () => { cfg[key] = v; renderCfg(); });
+          box.appendChild(b);
+        });
+      };
+      mk($("modes"), MODES, "mode");
+      mk($("diffs"), DIFFS.map((d, i) => [i, d.n + " · " + d.t + " s"]), "diff");
+      $("albrow").classList.toggle("hidden", cfg.mode === "classic");
+      $("hint").textContent = HINTS[cfg.mode];
+      showBest();
+    }
+
+    /* ---------- Partie ---------- */
+    let qs, i, score, good, streak, bestStreak, left, tick, locked, TM;
+
+    const store = {
+      get() { try { return Number(localStorage.getItem("ag-quiz-best")) || 0; } catch (e) { return 0; } },
+      set(v) { try { localStorage.setItem("ag-quiz-best", v); } catch (e) {} }
+    };
+    const show = id => ["start", "game", "end"].forEach(s => $(s).classList.toggle("hidden", s !== id));
+    function showBest() { const b = store.get(); $("best").textContent = b ? "Ton meilleur score : " + b + " pts" : ""; }
+
+    function start() {
+      qs = build();
+      if (!qs.length) { alert("Pas assez de questions pour ce choix."); return; }
+      i = 0; score = 0; good = 0; streak = 0; bestStreak = 0;
+      $("total").textContent = qs.length;
+      show("game");
+      ask();
+    }
+
+    function ask() {
+      locked = false;
+      const q = qs[i];
+      const D = DIFFS[cfg.diff];
+      $("num").textContent = i + 1;
+      $("pts").textContent = score;
+      $("streak").textContent = streak >= 2 ? "🔥 Série ×" + streak : "";
+      $("prog").style.width = (i / qs.length * 100) + "%";
+      $("cat").textContent = q.cat;
+      $("qtext").textContent = q.q;
+      $("fb").classList.add("hidden");
+      $("nextrow").classList.add("hidden");
+      $("next").textContent = i === qs.length - 1 ? "Voir mon résultat →" : "Suivant →";
+
+      stopAudio();
+      $("audio").classList.toggle("hidden", !q.track);
+      $("aud").classList.remove("show");
+      if (q.track) $("alabel").textContent = "Extrait de " + D.clip + " s";
+
+      const box = $("opts");
+      box.innerHTML = "";
+      shuffle(q.a).forEach((txt, k) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "opt";
+        b.innerHTML = '<span class="k">' + (k + 1) + '</span><span class="t"></span>';
+        b.querySelector(".t").textContent = txt;
+        b.addEventListener("click", () => answer(b, txt === q.a[0]));
+        box.appendChild(b);
+      });
+
+      TM = D.t + (q.track ? 10 : 0);
+      left = TM;
+      clearInterval(tick);
+      updateTimer();
+      tick = setInterval(() => {
+        left -= 0.1;
+        updateTimer();
+        if (left <= 0) { clearInterval(tick); answer(null, false, true); }
+      }, 100);
+    }
+
+    function updateTimer() {
+      $("timer").style.width = Math.max(left, 0) / TM * 100 + "%";
+      $("timerbar").classList.toggle("low", left <= 5);
+    }
+
+    function answer(btn, ok, timeout) {
+      if (locked) return;
+      locked = true;
+      clearInterval(tick);
+      stopAudio();
+      const q = qs[i];
+      document.querySelectorAll(".opt").forEach(o => {
+        o.disabled = true;
+        const isRight = o.querySelector(".t").textContent === q.a[0];
+        if (isRight) o.classList.add("good");
+        else if (o === btn) o.classList.add("bad");
+        else o.classList.add("dim");
+      });
+
+      let msg;
+      if (ok) {
+        streak++; good++; bestStreak = Math.max(bestStreak, streak);
+        const gain = Math.round((100 + left * 5 + Math.min(streak - 1, 5) * 10) * DIFFS[cfg.diff].m);
+        score += gain;
+        msg = "✅ Bonne réponse ! <strong>+" + gain + " pts</strong><br>";
+      } else {
+        streak = 0;
+        msg = (timeout ? "⏱️ Temps écoulé ! " : "❌ Raté ! ") + "<br>";
+      }
+      $("pts").textContent = score;
+      $("streak").textContent = streak >= 2 ? "🔥 Série ×" + streak : "";
+      $("fb").innerHTML = msg + q.e;
+      $("fb").classList.remove("hidden");
+      $("nextrow").classList.remove("hidden");
+      $("next").focus();
+    }
+
+    function finish() {
+      stopAudio();
+      $("prog").style.width = "100%";
+      show("end");
+      const pct = good / qs.length;
+      const ranks = [
+        [1,    "🏆", "Superfan absolu·e",   "Tu connais Ariana mieux que personne. Respect !"],
+        [0.8,  "💖", "Vrai·e fan",          "Presque parfait, tu connais ta discographie sur le bout des doigts."],
+        [0.6,  "✨", "Fan confirmé·e",       "Belle performance, encore quelques écoutes et tu seras imbattable."],
+        [0.4,  "🎧", "Auditeur·rice curieux·se", "Tu as de bonnes bases. Un petit tour par la page Musique ?"],
+        [0,    "🌱", "Nouveau·elle fan",    "Le voyage commence : explore les albums et reviens te tester !"]
+      ];
+      const r = ranks.find(x => pct >= x[0]);
+      $("emoji").textContent = r[1];
+      $("fscore").textContent = score;
+      $("rank").textContent = r[2];
+      $("detail").textContent = good + "/" + qs.length + " bonnes réponses · meilleure série : " + bestStreak + " · " + r[3];
+      const best = store.get();
+      if (score > best) { store.set(score); $("record").textContent = best ? "🎉 Nouveau record personnel !" : "🎉 Premier score enregistré !"; }
+      else $("record").textContent = "Ton record : " + best + " pts";
+      const modeName = MODES.find(m => m[0] === cfg.mode)[1];
+      $("share").dataset.text = "J’ai fait " + score + " pts (" + good + "/" + qs.length + ") au quiz Ariana Grande, mode " + modeName + " " + DIFFS[cfg.diff].n + " : " + r[2] + " " + r[1];
+    }
+
+    /* ---------- Mode « Devine le titre » : extrait Spotify ---------- */
+    let ctl = null, stopT = 0, armed = false, firstReady = false;
+
+    function onUpd(e) {
+      const d = e && e.data;
+      if (!d || !armed) return;
+      if (!d.isPaused && !d.isBuffering) {          // la lecture a vraiment démarré
+        armed = false;
+        clearTimeout(stopT);
+        stopT = setTimeout(() => { try { ctl.pause(); } catch (x) {} }, DIFFS[cfg.diff].clip * 1000);
+      }
+    }
+    function stopAudio() {
+      clearTimeout(stopT);
+      armed = false;
+      if (ctl) { try { ctl.pause(); } catch (x) {} }
+    }
+    function listen(sid) {
+      const go = () => { armed = true; ctl.loadUri("spotify:track:" + sid); ctl.play(); };
+      if (ctl) { go(); return; }
+      AG.spotify(api => api.createController($("embed"), { uri: "spotify:track:" + sid, width: "100%", height: 80 }, c => {
+        ctl = c;
+        c.addListener("playback_update", onUpd);
+        c.addListener("ready", () => { if (!firstReady) { firstReady = true; go(); } });
+      }));
+    }
+    $("listen").addEventListener("click", () => listen(qs[i].track));
+    $("showp").addEventListener("click", () => $("aud").classList.toggle("show"));
+
+    /* ---------- Événements ---------- */
+    $("go").addEventListener("click", start);
+    $("again").addEventListener("click", start);
+    $("menu").addEventListener("click", () => { renderCfg(); show("start"); });
+    $("next").addEventListener("click", () => { i++; i < qs.length ? ask() : finish(); });
+    $("share").addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      try { await navigator.clipboard.writeText(btn.dataset.text); btn.textContent = "Copié ✓"; }
+      catch (err) { btn.textContent = "Copie impossible"; }
+      setTimeout(() => btn.textContent = "Copier mon résultat", 1800);
+    });
+
+    // Raccourcis clavier : 1-4 pour répondre
+    document.addEventListener("keydown", (e) => {
+      if ($("game").classList.contains("hidden")) return;
+      if (!locked && /^[1-4]$/.test(e.key)) {
+        const b = document.querySelectorAll(".opt")[Number(e.key) - 1];
+        if (b) b.click();
+      }
+    });
+
+    renderCfg();
+  </script>
+
+  <script src="script.js" defer></script>
+</body>
+</html>

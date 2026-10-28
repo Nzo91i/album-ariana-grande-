@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ariana Grande – Musique</title>
+  <meta name="description" content="Tous les titres d'Ariana Grande : recherche, filtre par album, favoris et playlist.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .toolbar { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; animation: fadeUp .7s var(--ease) .25s backwards; }
+    .toolbar input {
+      flex: 1; min-width: 220px; font: inherit; color: #fff; padding: 14px 22px;
+      border-radius: 999px; border: 1px solid var(--border); background: var(--glass);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); outline: none;
+      transition: border-color .3s, box-shadow .3s;
+    }
+    .toolbar input::placeholder { color: var(--muted); }
+    .toolbar input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(208, 0, 255, .25); }
+    .toolbar .btn-main { font: inherit; font-weight: 600; color: #fff; border: 0; cursor: pointer; }
+
+    .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; animation: fadeUp .7s var(--ease) .35s backwards; }
+    .chip {
+      font: inherit; font-size: 14px; color: #fff; cursor: pointer; padding: 8px 16px;
+      border-radius: 999px; border: 1px solid var(--border); background: var(--glass);
+      transition: transform .3s var(--ease), background .3s;
+    }
+    .chip:hover { transform: translateY(-3px); background: rgba(255, 255, 255, .15); }
+    .chip.active { background: linear-gradient(135deg, var(--accent), var(--accent2)); border-color: transparent; box-shadow: 0 6px 18px rgba(208, 0, 255, .4); }
+
+    .count { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+
+    .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 24px; padding-bottom: 20px; }
+
+    .mcard {
+      padding: 20px; border-radius: 22px; background: var(--glass); border: 1px solid var(--border);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      animation: fadeUp .7s var(--ease) backwards;
+      transition: transform .4s var(--ease), box-shadow .4s, border-color .4s;
+    }
+    .mcard:hover { transform: translateY(-6px); box-shadow: 0 22px 48px rgba(208, 0, 255, .25); border-color: rgba(255, 255, 255, .25); }
+
+    .mhead { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+    .mcover {
+      position: relative; width: 76px; height: 76px; flex-shrink: 0; border-radius: 14px;
+      overflow: hidden; box-shadow: 0 8px 20px rgba(0, 0, 0, .45);
+    }
+    .mcover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .mhead h2 { margin: 0; font-size: 18px; }
+    .mhead p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+    .mhead .open {
+      margin-left: auto; font-size: 13px; padding: 8px 14px; border-radius: 999px;
+      background: rgba(255, 255, 255, .1); white-space: nowrap;
+      transition: background .3s, transform .3s var(--ease);
+    }
+    .mhead .open:hover { background: linear-gradient(135deg, var(--accent), var(--accent2)); transform: translateX(4px); }
+
+    .trow { display: flex; align-items: center; border-radius: 10px; }
+    .trow a {
+      flex: 1; min-width: 0; display: flex; align-items: center; gap: 14px; padding: 9px 12px; border-radius: 10px;
+      font-size: 15px; transition: background .25s, transform .3s var(--ease);
+    }
+    .trow a:hover { background: rgba(255, 255, 255, .12); transform: translateX(6px); }
+    .trow .n { width: 22px; text-align: right; color: var(--muted); font-size: 13px; }
+    .trow.flash { animation: flash 2s; }
+    @keyframes flash { 0%, 100% { background: transparent; } 25% { background: rgba(208, 0, 255, .5); } }
+
+    .empty { text-align: center; color: var(--muted); padding: 40px 0; grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <nav aria-label="Navigation principale">
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="albums.html">Albums</a></li>
+        <li><a href="musique.html" class="active">Musique</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <small>Tous les titres</small>
+      <h1>Musique</h1>
+      <p class="intro">Cherche un titre, filtre par album, ajoute tes ♥ favoris ou construis ta playlist avec ＋.</p>
+
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="Rechercher un titre…" aria-label="Rechercher un titre" autocomplete="off">
+        <button class="btn-main" id="random" type="button">🎲 Surprends-moi</button>
+      </div>
+
+      <div class="chips" id="chips"></div>
+
+      <p class="count" id="count"></p>
+      <div class="mgrid" id="grid"></div>
+    </div>
+  </main>
+
+  <footer>
+    
+  </footer>
+
+  <script src="data.js"></script>
+  <script>
+    const albums = AG.albums;
+    const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    const searchEl = document.getElementById("search");
+    const chipsEl  = document.getElementById("chips");
+    const gridEl   = document.getElementById("grid");
+    const countEl  = document.getElementById("count");
+
+    let currentAlbum = "all";
+
+    function setChip(value) {
+      currentAlbum = value;
+      chipsEl.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c.dataset.v === value));
+    }
+    function makeChip(label, value) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip" + (value === "all" ? " active" : "");
+      b.dataset.v = value;
+      b.textContent = label;
+      b.addEventListener("click", () => { setChip(value); render(); });
+      chipsEl.appendChild(b);
+    }
+    makeChip("Tous", "all");
+    makeChip("♥ Favoris", "fav");
+    albums.forEach(al => makeChip(al.title, al.key));
+
+    function render() {
+      const q = norm(searchEl.value.trim());
+      gridEl.innerHTML = "";
+      let total = 0, shown = 0;
+
+      albums.forEach(al => {
+        if (currentAlbum !== "all" && currentAlbum !== "fav" && al.key !== currentAlbum) return;
+
+        const albumMatch = q !== "" && norm(al.title).includes(q);
+        const rows = al.tracks
+          .map((name, i) => ({ name, n: i + 1, id: al.key + ":" + (i + 1) }))
+          .filter(t => (q === "" || albumMatch || norm(t.name).includes(q)) && (currentAlbum !== "fav" || AG.favs.has(t.id)));
+        if (rows.length === 0) return;
+
+        total += rows.length;
+        const card = document.createElement("article");
+        card.className = "mcard";
+        card.style.animationDelay = (shown * 0.07) + "s";
+        shown++;
+
+        const head = document.createElement("div");
+        head.className = "mhead";
+        head.innerHTML =
+          '<div class="mcover"><img></div>' +
+          '<div><h2></h2><p></p></div>' +
+          '<a class="open">Ouvrir →</a>';
+        const cover = head.querySelector(".mcover");
+        cover.style.background = al.bg;
+        AG.setImg(cover.querySelector("img"), al);
+        head.querySelector("h2").textContent = al.title;
+        head.querySelector("p").textContent = al.year + " · " + rows.length + (rows.length > 1 ? " titres" : " titre");
+        head.querySelector(".open").href = "tracklist.html?album=" + al.key;
+        card.appendChild(head);
+
+        const list = document.createElement("div");
+        list.className = "mtracks";
+        rows.forEach(t => {
+          const row = document.createElement("div");
+          row.className = "trow";
+          row.dataset.id = t.id;
+          const a = document.createElement("a");
+          a.href = "tracklist.html?album=" + al.key;
+          a.innerHTML = '<span class="n"></span><span class="t"></span>';
+          a.querySelector(".n").textContent = t.n;
+          a.querySelector(".t").textContent = t.name;
+          const acts = document.createElement("span");
+          acts.className = "acts";
+          acts.append(AG.heart(t.id), AG.plus(t.id));
+          row.append(a, acts);
+          list.appendChild(row);
+        });
+        card.appendChild(list);
+        gridEl.appendChild(card);
+      });
+
+      countEl.textContent = total + (total > 1 ? " titres" : " titre");
+      if (total === 0) {
+        const p = document.createElement("p");
+        p.className = "empty";
+        p.textContent = currentAlbum === "fav" ? "Aucun favori pour l'instant : clique sur ♡ à côté d'un titre 💜" : "Aucun titre trouvé 😢";
+        gridEl.appendChild(p);
+      }
+    }
+
+    searchEl.addEventListener("input", render);
+    // Quand on retire un favori dans la vue « Favoris », la liste se met à jour
+    document.addEventListener("ag-favs", () => { if (currentAlbum === "fav") render(); });
+
+    // Titre au hasard : on affiche tout, puis on fait briller un titre
+    document.getElementById("random").addEventListener("click", () => {
+      searchEl.value = "";
+      setChip("all");
+      render();
+      const all = AG.allTracks();
+      const t = all[Math.floor(Math.random() * all.length)];
+      const el = gridEl.querySelector('[data-id="' + t.id + '"]');
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("flash");
+      }
+    });
+
+    render();
+  </script>
+
+  <script src="script.js" defer></script>
+</body>
+</html>

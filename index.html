@@ -4,50 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ariana Grande – Ma playlist</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      color: #ffffff;
-      background-color: #121212;
-      background-image: linear-gradient(180deg, #c38cc7, #121212 500px);
-      background-repeat: no-repeat;
-    }
-    a { color: #ffffff; text-decoration: none; }
-    ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 10px; flex-wrap: wrap; }
-    header, footer { padding: 16px 32px; }
-    nav a { display: block; padding: 8px 16px; border-radius: 999px; background: rgba(255,255,255,0.12); }
-    header li:first-child a { background: #d000ff; color: #000000; }
-    main { padding: 16px 32px; }
-    section { max-width: 960px; margin: 0 auto; display: flex; gap: 32px; flex-wrap: wrap; }
-    section > div:first-child { width: 240px; }
-    section > div:last-child { flex: 1; min-width: 280px; }
-    img { width: 240px; height: 240px; object-fit: cover; border-radius: 6px; background: #7a4fb0; }
-    small { color: #b3b3b3; }
-    h1 { font-size: 56px; margin: 4px 0 24px; line-height: 1; }
-    ol { list-style: none; margin: 0; padding: 0; }
-    ol li { padding: 12px 0; }
-    iframe { display: block; width: 100%; border: 0; border-radius: 12px; }
-    footer { color: #b3b3b3; }
-    footer a { color: #b3b3b3; }
-  </style>
+  <meta name="description" content="Site de fan d'Ariana Grande : albums, titres, quiz, anecdotes et biographie.">
+  <meta property="og:title" content="Ariana Grande – Ma playlist">
+  <meta property="og:description" content="Découvre tous les albums d'Ariana Grande et teste-toi avec le quiz.">
+  <meta property="og:image" content="thank-u-next.jpg">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="style.css">
+  <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
 
   <header>
     <nav aria-label="Navigation principale">
       <ul>
-        <li><a href="#">Accueil</a></li>
+        <li><a href="index.html" class="active">Accueil</a></li>
         <li><a href="albums.html">Albums</a></li>
-        <li><a href="#">Musique</a></li>
+        <li><a href="musique.html">Musique</a></li>
       </ul>
     </nav>
   </header>
 
   <main>
-    <section>
+
+    <!-- Bloc d'ouverture -->
+    <section class="profil hero">
       <div>
-        <img src="thank u next.jpg" alt="Portrait d’Ariana Grande" width="100" height="100">
+        <img class="portrait" id="portrait" alt="Pochette de thank u, next">
         <p>Née en Floride en 1993, révélée à la télévision avant de devenir l’une des voix pop les plus reconnaissables.</p>
       </div>
 
@@ -66,16 +48,74 @@
               loading="lazy"></iframe>
           </li>
         </ol>
+
+        <div class="cta">
+          <a class="btn-main" href="albums.html">Voir tous les albums</a>
+          <a class="btn-ghost" href="quiz.html">🎯 Faire le quiz</a>
+          <a class="btn-ghost" href="#albums">Découvrir ↓</a>
+        </div>
       </div>
     </section>
+
+    <!-- Chiffres clés (calculés automatiquement depuis data.js) -->
+    <section class="container reveal">
+      <div class="stats" id="stats"></div>
+
+      <div class="didyou">
+        <small>Le saviez-vous ?</small>
+        <p id="fact"></p>
+        <button class="btn-ghost" id="another" type="button">Un autre fait 🎲</button>
+      </div>
+    </section>
+
+    <!-- Albums -->
+    <section class="container reveal" id="albums">
+      <small>Discographie</small>
+      <h2 class="section-title">Ses albums</h2>
+      <div class="scroller" id="scroller"></div>
+    </section>
+
   </main>
 
   <footer>
-    <nav aria-label="Navigation du pied de page">
-      
-    </nav>
-    <p></p>
+    
   </footer>
 
+  <script src="data.js"></script>
+  <script>
+    // Pochette d'accueil
+    AG.setImg(document.getElementById("portrait"), AG.get("thank-u-next"), true);
+
+    // Chiffres clés
+    const T = AG.allTracks();
+    const feats = T.filter(t => AG.feat(t.title)).length;
+    const longest = [...AG.albums].sort((a, b) => b.tracks.length - a.tracks.length)[0];
+    const stats = [
+      [AG.albums.length, "albums studio"],
+      [T.length, "titres au total"],
+      [feats, "collaborations"],
+      [longest.tracks.length, "titres sur " + longest.title + ", le plus long"],
+      ["2013 → 2026", "de Yours Truly à petal"],
+      ["Floride", "née en 1993"]
+    ];
+    document.getElementById("stats").innerHTML = stats.map(([v, l]) =>
+      '<div class="stat"><strong>' + v + "</strong><span>" + AG.esc(l) + "</span></div>").join("");
+
+    // Fait au hasard
+    const factEl = document.getElementById("fact");
+    const allFacts = [...AG.general, ...AG.albums.flatMap(a => a.facts.map(f => a.title + " : " + f))].filter(f => f.length < 220);
+    const newFact = () => { factEl.textContent = allFacts[Math.floor(Math.random() * allFacts.length)]; };
+    document.getElementById("another").addEventListener("click", newFact);
+    newFact();
+
+    // Rangée d'albums
+    const sc = document.getElementById("scroller");
+    AG.albums.forEach(al => {
+      const c = AG.albumCard(al, al.year);
+      c.classList.add("mini");
+      sc.appendChild(c);
+    });
+  </script>
+  <script src="script.js" defer></script>
 </body>
 </html>

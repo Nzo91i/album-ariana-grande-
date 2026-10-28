@@ -4,33 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Track list – Ariana Grande</title>
-  <style>
-    body { margin:0; font-family: Arial, Helvetica, sans-serif; color:#fff; background-color:#121212;
-      background-image: linear-gradient(180deg, #c38cc7, #121212 500px); background-repeat:no-repeat; }
-    a { color:#fff; text-decoration:none; }
-    ul { list-style:none; margin:0; padding:0; display:flex; gap:10px; flex-wrap:wrap; }
-    header, footer { padding:16px 32px; }
-    nav a { display:block; padding:8px 16px; border-radius:999px; background:rgba(255,255,255,0.12); }
-    nav a.active { background:#d000ff; color:#000; }
-    main { padding:16px 32px; }
-    .container { max-width:960px; margin:0 auto; }
-    small { color:#b3b3b3; }
-    h1 { font-size:56px; margin:4px 0 8px; line-height:1; }
-    .back { display:inline-block; margin:8px 0 24px; color:#b3b3b3; }
-    .back:hover { color:#fff; }
-    .head { display:flex; gap:28px; align-items:flex-end; flex-wrap:wrap; margin-bottom:32px; }
-    .cover { position:relative; width:220px; height:220px; flex-shrink:0; border-radius:8px; overflow:hidden;
-      display:flex; align-items:flex-end; padding:10px; box-sizing:border-box; font-weight:bold; font-size:14px;
-      color:rgba(255,255,255,0.85); box-shadow:0 8px 24px rgba(0,0,0,0.4); }
-    .cover img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-    .meta p { margin:0; color:#b3b3b3; }
-    .tracks { list-style:none; margin:0; padding:0; }
-    .tracks li { display:flex; align-items:center; gap:20px; padding:12px 16px; border-radius:6px; transition:background .2s; }
-    .tracks li:hover { background:rgba(255,255,255,0.1); }
-    .tracks .n { width:24px; text-align:right; color:#b3b3b3; }
-    .tracks .t { font-size:16px; }
-    footer { color:#b3b3b3; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -39,7 +13,7 @@
       <ul>
         <li><a href="index.html">Accueil</a></li>
         <li><a href="albums.html" class="active">Albums</a></li>
-        <li><a href="#">Musique</a></li>
+        <li><a href="musique.html">Musique</a></li>
       </ul>
     </nav>
   </header>
@@ -57,88 +31,116 @@
         </div>
       </div>
 
+      <div class="actions" id="actions">
+        <button class="btn-ghost" id="addall" type="button">＋ Tout ajouter à ma playlist</button>
+        <a class="btn-ghost" href="playlist.html">Ouvrir ma playlist</a>
+      </div>
+
+      <!-- Lecteur Spotify -->
+      <div id="lecteur"><div id="embed"></div></div>
+
       <ol class="tracks" id="tracks"></ol>
+
+      <div id="factsbox"></div>
+
+      <nav class="pn" id="pn" aria-label="Changer d'album"></nav>
     </div>
   </main>
 
   <footer>
-    <p></p>
+    <p>Site de fan non officiel · Fait avec 💜</p>
   </footer>
 
+  <script src="data.js"></script>
   <script>
-    const albums = {
-      "yours-truly": {
-        title: "Yours Truly", year: "2013", img: "yours truly.jpg",
-        bg: "linear-gradient(135deg, #f4c6d8, #b98fd1)",
-        tracks: ["Honeymoon Avenue","Baby I","Right There (feat. Big Sean)","Tattooed Heart","Lovin' It","Piano","Daydreamin'","The Way (feat. Mac Miller)","You'll Never Know","Almost Is Never Enough (with Nathan Sykes)"]
-      },
-      "my-everything": {
-        title: "My Everything", year: "2014", img: "my evrything.jpg",
-        bg: "linear-gradient(135deg, #2b2b2b, #8a8a8a)",
-        tracks: ["Intro","Problem (feat. Iggy Azalea)","One Last Time","Why Try","Break Free (feat. Zedd)","Best Mistake (feat. Big Sean)","Be My Baby (feat. Cashmere Cat)","Break Your Heart Right Back (feat. Childish Gambino)","Love Me Harder (with The Weeknd)","Just a Little Bit of Your Heart","Hands on Me (feat. A$AP Ferg)","My Everything"]
-      },
-      "dangerous-woman": {
-        title: "Dangerous Woman", year: "2016", img: "dangerous woman.jpg",
-        bg: "linear-gradient(135deg, #111111, #6b6b6b)",
-        tracks: ["Moonlight","Dangerous Woman","Be Alright","Into You","Side to Side (feat. Nicki Minaj)","Let Me Love You (feat. Lil Wayne)","Greedy","Leave Me Lonely (feat. Macy Gray)","Everyday (feat. Future)","Sometimes","I Don't Care","Bad Decisions","Touch It","Knew Better / Forever Boy","Thinking Bout You"]
-      },
-      "sweetener": {
-        title: "Sweetener", year: "2018", img: "sweetener.jpg",
-        bg: "linear-gradient(135deg, #8fd3f4, #84fab0)",
-        tracks: ["raindrops (an angel cried)","blazed (feat. Pharrell Williams)","the light is coming (feat. Nicki Minaj)","R.E.M","God is a woman","sweetener","successful","everytime","breathin","no tears left to cry","borderline (feat. Missy Elliott)","better off","goodnight n go","pete davidson","get well soon"]
-      },
-      "thank-u-next": {
-        title: "thank u, next", year: "2019", img: "thank u next.jpg",
-        bg: "linear-gradient(135deg, #ff9ecb, #ffd1e8)",
-        tracks: ["imagine","needy","NASA","bloodline","fake smile","bad idea","make up","ghostin","in my head","7 rings","thank u, next","break up with your girlfriend, i'm bored"]
-      },
-      "positions": {
-        title: "Positions", year: "2020", img: "position.jpg",
-        bg: "linear-gradient(135deg, #7a4fb0, #e0a96d)",
-        tracks: ["shut up","34+35","motive (with Doja Cat)","just like magic","off the table (with The Weeknd)","six thirty","safety net (feat. Ty Dolla $ign)","my hair","nasty","west side","love language","positions","obvious","pov"]
-      },
-      "eternal-sunshine": {
-        title: "eternal sunshine", year: "2024", img: "eternel sunshine.jpg",
-        bg: "linear-gradient(135deg, #dfe9f3, #a8c0ff)",
-        tracks: ["intro (end of the world)","bye","don't wanna break up again","Saturn returns interlude","eternal sunshine","supernatural","twilight zone","true story","the boy is mine","yes, and?","we can't be friends (wait for your love)","i wish i hated you","imperfect for you"]
-      },
-            "petal": {
-        title: "petal", year: "2026", img: "petal.jpg",
-        bg: "linear-gradient(135deg, #c9d6c3, #f2efe6)",
-        tracks: ["kiss me","hate that i made you love me","petal","stay","oh well","big feelings","freak","(warning signs)","like i do","never get over me","bad thing (bunny hop)","nowhere, nobody"]
-      }
-    };
-
     const id = new URLSearchParams(location.search).get("album");
-    const a = albums[id];
+    const a = AG.get(id);
 
     if (!a) {
       document.getElementById("title").textContent = "Album introuvable";
       document.getElementById("cover").remove();
+      document.getElementById("lecteur").remove();
+      document.getElementById("actions").remove();
     } else {
       document.title = "Track list – " + a.title + " – Ariana Grande";
       document.getElementById("title").textContent = a.title;
       document.getElementById("info").textContent =
         "Ariana Grande · " + a.year + " · " + a.tracks.length + " titres";
 
+      // Pochette
       const cover = document.getElementById("cover");
       cover.style.background = a.bg;
       cover.textContent = a.year;
       const img = document.createElement("img");
-      img.src = a.img;
-      img.alt = "Pochette de " + a.title;
-      img.onerror = () => img.remove();
+      AG.setImg(img, a);
       cover.appendChild(img);
 
+      // Tout ajouter à la playlist
+      document.getElementById("addall").addEventListener("click", () => {
+        let n = 0;
+        a.tracks.forEach((t, i) => { if (AG.pl.add(a.key + ":" + (i + 1))) n++; });
+        AG.toast(n ? n + " titres ajoutés à ta playlist ✓" : "Tout est déjà dans ta playlist");
+      });
+
+      // Lecteur Spotify (API officielle, permet de changer de morceau)
+      let controller = null;
+      if (a.spotify) {
+        AG.spotify((IFrameAPI) => {
+          IFrameAPI.createController(
+            document.getElementById("embed"),
+            { uri: "spotify:album:" + a.spotify, width: "100%", height: 352 },
+            (c) => { controller = c; }
+          );
+        });
+      }
+
+      // Liste des titres (cliquables, accessibles au clavier)
       const list = document.getElementById("tracks");
       a.tracks.forEach((t, i) => {
+        const tid = a.key + ":" + (i + 1);
         const li = document.createElement("li");
-        li.innerHTML = '<span class="n">' + (i + 1) + '</span><span class="t"></span>';
+        li.innerHTML =
+          '<button type="button" class="tbtn"><span class="n"></span><span class="t"></span></button>' +
+          '<span class="acts"></span>';
+        li.querySelector(".n").textContent = i + 1;
         li.querySelector(".t").textContent = t;
+        li.querySelector(".acts").append(AG.heart(tid), AG.plus(tid));
+
+        li.addEventListener("click", (e) => {
+          if (e.target.closest(".acts")) return;
+          if (controller && a.ids[i]) {
+            list.querySelectorAll("li").forEach(x => x.classList.remove("playing"));
+            li.classList.add("playing");
+            controller.loadUri("spotify:track:" + a.ids[i]);
+            controller.play();
+            document.getElementById("lecteur").scrollIntoView({ behavior: "smooth", block: "center" });
+          } else {
+            window.open(
+              "https://open.spotify.com/search/" + encodeURIComponent(t + " Ariana Grande"),
+              "_blank"
+            );
+          }
+        });
+
         list.appendChild(li);
       });
+
+      // À savoir (anecdotes de l'album)
+      if (a.facts && a.facts.length) {
+        document.getElementById("factsbox").innerHTML =
+          '<h2 class="facts-title">À savoir</h2>' +
+          a.facts.map(f => '<div class="fact">' + AG.esc(f) + "</div>").join("");
+      }
+
+      // Album précédent / suivant
+      const keys = AG.albums.map(x => x.key), k = keys.indexOf(id);
+      const link = (j, dir) => '<a href="tracklist.html?album=' + keys[j] + '">' +
+        (dir < 0 ? "← " : "") + AG.albums[j].title + (dir > 0 ? " →" : "") + "</a>";
+      document.getElementById("pn").innerHTML =
+        (k > 0 ? link(k - 1, -1) : "<span></span>") +
+        (k < keys.length - 1 ? link(k + 1, 1) : "<span></span>");
     }
   </script>
-
+  <script src="script.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ariana Grande – Anecdotes</title>
+  <meta name="description" content="Records, collaborations et faits marquants album par album.">
+  <link rel="stylesheet" href="style.css">
+  <script>document.documentElement.classList.add("js");</script>
+</head>
+<body>
+
+  <header>
+    <nav aria-label="Navigation principale">
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="albums.html">Albums</a></li>
+        <li><a href="musique.html">Musique</a></li>
+        <li><a href="anecdotes.html" class="active">Anecdotes</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <small>Le saviez-vous ?</small>
+      <h1>Anecdotes</h1>
+      <p class="intro">Records, collaborations et petits faits marquants, album par album.</p>
+
+      <div class="didyou">
+        <small>Fait au hasard</small>
+        <p id="fact"></p>
+        <button class="btn-ghost" id="another" type="button">Un autre 🎲</button>
+      </div>
+
+      <div class="fgrid" id="grid"></div>
+    </div>
+  </main>
+
+  <footer>
+    
+  </footer>
+
+  <script src="data.js"></script>
+  <script>
+    const grid = document.getElementById("grid");
+    AG.albums.forEach(al => {
+      const card = document.createElement("a");
+      card.className = "fcard reveal";
+      card.href = "tracklist.html?album=" + al.key;
+      card.innerHTML =
+        '<div class="mhead"><div class="mcover"><img></div><div><h2></h2><p class="sub"></p></div></div>' +
+        '<ul class="fl"></ul><span class="go">Voir les titres →</span>';
+      const cover = card.querySelector(".mcover");
+      cover.style.background = al.bg;
+      AG.setImg(cover.querySelector("img"), al);
+      card.querySelector("h2").textContent = al.title;
+      card.querySelector(".sub").textContent = al.year + " · " + al.tracks.length + " titres";
+      card.querySelector(".fl").innerHTML = al.facts.map(f => "<li>" + AG.esc(f) + "</li>").join("");
+      grid.appendChild(card);
+    });
+
+    const factEl = document.getElementById("fact");
+    const all = [...AG.general, ...AG.albums.flatMap(a => a.facts.map(f => a.title + " : " + f))].filter(f => f.length < 220);
+    const newFact = () => { factEl.textContent = all[Math.floor(Math.random() * all.length)]; };
+    document.getElementById("another").addEventListener("click", newFact);
+    newFact();
+  </script>
+  <script src="script.js" defer></script>
+</body>
+</html>

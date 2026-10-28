@@ -1,0 +1,130 @@
+/* ==========================================================
+   extra.css – effets et finitions (chargé par script.js)
+   ========================================================== */
+
+/* Couleurs animées : changent en douceur selon l'album */
+@property --accent  { syntax: '<color>'; inherits: true; initial-value: #d000ff; }
+@property --accent2 { syntax: '<color>'; inherits: true; initial-value: #ff5fa2; }
+:root { transition: --accent .7s ease, --accent2 .7s ease; }
+
+/* Grain léger sur tout le site */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 200; pointer-events: none; opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+
+/* Transition entre les pages */
+body { animation: pageIn .6s var(--ease) both; }
+body.leaving { opacity: 0; transition: opacity .25s; }
+@keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Accessibilité : contour visible au clavier */
+:focus-visible { outline: 2px solid var(--accent2); outline-offset: 3px; border-radius: 8px; }
+
+/* Barre de progression */
+.progress {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0; z-index: 100;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 12px var(--accent);
+}
+
+/* Halo qui suit la souris */
+.glow {
+  position: fixed; left: 0; top: 0; width: 460px; height: 460px;
+  margin: -230px 0 0 -230px; border-radius: 50%; pointer-events: none; z-index: -1;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 65%);
+}
+
+/* En-tête : logo + navigation, qui se réduit au défilement */
+header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  transition: padding .35s var(--ease), background .35s;
+}
+header.scrolled { padding-top: 8px; padding-bottom: 8px; background: rgba(11, 11, 18, .8); }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .5px; }
+.eq { display: flex; align-items: flex-end; gap: 3px; height: 22px; }
+.eq i {
+  width: 4px; height: 30%; border-radius: 2px;
+  background: linear-gradient(var(--accent2), var(--accent));
+  animation: bar 1s ease-in-out infinite;
+}
+.eq i:nth-child(2) { animation-delay: .2s; }
+.eq i:nth-child(3) { animation-delay: .4s; }
+.eq i:nth-child(4) { animation-delay: .1s; }
+@keyframes bar { 0%, 100% { height: 25%; } 50% { height: 100%; } }
+
+/* Bandeau défilant */
+.marquee {
+  overflow: hidden; white-space: nowrap; padding: 18px 0; margin: 24px 0;
+  border-block: 1px solid var(--border); background: rgba(255, 255, 255, .03);
+}
+.marquee div {
+  display: inline-block; font-size: 30px; font-weight: 800;
+  color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, .55);
+  animation: scrollX 30s linear infinite;
+}
+.marquee:hover div { animation-play-state: paused; }
+@keyframes scrollX { to { transform: translateX(-50%); } }
+
+/* Cartes d'albums en 3D */
+.album { transform-style: preserve-3d; }
+.album:hover {
+  transform: perspective(800px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-10px) scale(1.02);
+  box-shadow: 0 24px 50px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* Apparition au défilement */
+.js .reveal { opacity: 0; transform: translateY(40px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
+.js .reveal.visible { opacity: 1; transform: none; }
+
+/* Étincelles au clic */
+.spark {
+  position: fixed; z-index: 300; pointer-events: none; font-size: 16px;
+  color: var(--accent2); text-shadow: 0 0 10px var(--accent);
+  animation: spark .8s ease-out forwards;
+}
+@keyframes spark {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to   { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.2) rotate(180deg); }
+}
+
+/* Bouton retour en haut */
+.totop {
+  position: fixed; right: 22px; bottom: 22px; z-index: 60;
+  width: 48px; height: 48px; border: 0; border-radius: 50%; cursor: pointer;
+  color: #fff; font-size: 20px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--accent) 50%, transparent);
+  opacity: 0; transform: translateY(20px); pointer-events: none;
+  transition: opacity .3s, transform .3s var(--ease);
+}
+.totop.show { opacity: 1; transform: none; pointer-events: auto; }
+.totop:hover { transform: translateY(-4px) scale(1.08); }
+
+/* Page Bio : chronologie */
+.timeline { position: relative; margin: 40px 0; padding-left: 34px; }
+.timeline::before {
+  content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(var(--accent), var(--accent2), transparent);
+}
+.tl {
+  position: relative; display: block; padding: 20px 22px; margin-bottom: 20px;
+  border-radius: 18px; background: var(--glass); border: 1px solid var(--border);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transition: transform .35s var(--ease), background .35s, box-shadow .35s;
+}
+.tl::before {
+  content: ""; position: absolute; left: -34px; top: 26px; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--bg); border: 3px solid var(--accent2);
+  box-shadow: 0 0 14px var(--accent);
+}
+a.tl:hover { transform: translateX(10px); background: rgba(255, 255, 255, .12); box-shadow: 0 16px 36px color-mix(in srgb, var(--accent) 30%, transparent); }
+.tl b { display: inline-block; margin-bottom: 6px; font-size: 13px; letter-spacing: 2px; color: var(--accent2); text-transform: uppercase; }
+.tl h2 { margin: 0 0 6px; font-size: 20px; }
+.tl p { margin: 0; color: var(--muted); line-height: 1.6; }
+
+@media (max-width: 600px) {
+  .marquee div { font-size: 22px; }
+  .totop { right: 14px; bottom: 14px; }
+}
+@media (hover: none) { .glow { display: none; } }

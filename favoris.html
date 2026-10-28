@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ariana Grande – Mes favoris</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <nav aria-label="Navigation principale">
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="albums.html">Albums</a></li>
+        <li><a href="musique.html">Musique</a></li>
+        <li><a href="favoris.html" class="active">Favoris</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <small>Mes préférés</small>
+      <h1>Favoris</h1>
+      <p class="intro" id="intro"></p>
+
+      <div class="actions" id="actions">
+        <button class="btn-main" id="playall" type="button">▶ Lire mes favoris</button>
+        <button class="btn-ghost" id="clear" type="button">Tout vider</button>
+      </div>
+
+      <div class="list" id="list"></div>
+    </div>
+  </main>
+
+  <footer>
+    
+  </footer>
+
+  <script src="data.js"></script>
+  <script>
+    const listEl = document.getElementById("list");
+    const intro = document.getElementById("intro");
+    const actions = document.getElementById("actions");
+
+    function render() {
+      const items = AG.favs.get().map(AG.find).filter(Boolean);
+      listEl.innerHTML = "";
+      intro.textContent = items.length
+        ? items.length + (items.length > 1 ? " titres que tu aimes." : " titre que tu aimes.")
+        : "";
+      actions.classList.toggle("hidden", !items.length);
+      actions.style.display = items.length ? "" : "none";
+
+      if (!items.length) {
+        listEl.innerHTML = '<div class="empty-box">Aucun favori pour l’instant.<br>Clique sur ♡ à côté d’un titre sur la page <a href="musique.html"><u>Musique</u></a> ou sur une page d’album 💜</div>';
+        return;
+      }
+
+      items.forEach(t => {
+        const row = document.createElement("div");
+        row.className = "item";
+        row.innerHTML = '<a class="info"><b></b><span></span></a><span class="acts"></span>';
+        const a = row.querySelector(".info");
+        a.href = "tracklist.html?album=" + t.al.key;
+        a.querySelector("b").textContent = t.title;
+        a.querySelector("span").textContent = t.al.title + " · " + t.al.year;
+        row.querySelector(".acts").append(AG.heart(t.id), AG.plus(t.id));
+        listEl.appendChild(row);
+      });
+    }
+
+    document.addEventListener("ag-favs", render);
+
+    document.getElementById("playall").addEventListener("click", () => {
+      AG.pl.set(AG.favs.get());
+      location.href = "playlist.html";
+    });
+    document.getElementById("clear").addEventListener("click", () => {
+      if (confirm("Retirer tous tes favoris ?")) { AG.favs.set([]); render(); }
+    });
+
+    render();
+  </script>
+  <script src="script.js" defer></script>
+</body>
+</html>
